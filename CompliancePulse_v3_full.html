@@ -1,0 +1,735 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--mon:'IBM Plex Mono',monospace;--san:'IBM Plex Sans',sans-serif}
+body{background:#080d17;color:#f1f5f9;font-family:var(--san);font-size:13px}
+@keyframes pdot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.78)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes deltaIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes progFill{from{width:0}to{width:100%}}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:#0d1524;border-bottom:1px solid rgba(148,163,184,.1);position:sticky;top:0;z-index:50}
+.logo{display:flex;align-items:center;gap:10px;font-family:var(--mon);font-size:13px;font-weight:600;color:#f1f5f9;letter-spacing:.05em}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:#10b981;animation:pdot 2s ease-in-out infinite;box-shadow:0 0 5px rgba(16,185,129,.6)}
+.logo-sub{font-size:9px;color:#64748b;font-weight:400;letter-spacing:.14em;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.tlabel{font-size:9px;color:#64748b;font-family:var(--mon);letter-spacing:.14em;text-transform:uppercase}
+.tsel{appearance:none;background:#1a2236;border:1px solid rgba(16,185,129,.28);color:#f1f5f9;font-family:var(--mon);font-size:11px;font-weight:500;padding:5px 28px 5px 10px;border-radius:5px;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2310b981' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:all .2s}
+.tsel:focus{outline:none}
+.bell-btn{position:relative;background:transparent;border:1px solid rgba(148,163,184,.15);color:#94a3b8;width:30px;height:30px;border-radius:5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
+.bell-btn:hover{border-color:rgba(148,163,184,.28);color:#f1f5f9}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-family:var(--mon);font-size:8px;font-weight:700;width:14px;height:14px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:1px solid #080d17}
+.live-pill{display:flex;align-items:center;gap:5px;font-family:var(--mon);font-size:9px;font-weight:500;letter-spacing:.1em;padding:4px 9px;border-radius:4px;text-transform:uppercase;background:rgba(16,185,129,.08);color:#10b981;border:1px solid rgba(16,185,129,.2)}
+.live-pill::before{content:'';width:5px;height:5px;border-radius:50%;background:#10b981;animation:pdot 1.5s ease-in-out infinite}
+.sync-ts{font-family:var(--mon);font-size:9px;color:#475569}
+
+.notif-drop{position:absolute;top:36px;right:0;width:300px;background:#111827;border:1px solid rgba(16,185,129,.25);border-radius:8px;z-index:200;overflow:hidden;display:none;animation:slideUp .2s ease}
+.notif-drop.open{display:block}
+.notif-header{padding:9px 12px;font-family:var(--mon);font-size:8px;color:#64748b;letter-spacing:.14em;text-transform:uppercase;border-bottom:1px solid rgba(148,163,184,.08)}
+.notif-item{padding:9px 12px;border-bottom:1px solid rgba(148,163,184,.07);display:flex;gap:9px;align-items:flex-start}
+.notif-item:last-child{border-bottom:none}
+.ndot{width:6px;height:6px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.ntext{font-size:11px;color:#cbd5e1;line-height:1.4}
+.ntime{font-family:var(--mon);font-size:8px;margin-top:2px}
+
+.main{padding:14px 20px;display:flex;flex-direction:column;gap:12px;background:#080d17;min-height:calc(100vh - 52px)}
+.r1{display:grid;grid-template-columns:210px 1fr 1fr 1fr;gap:12px}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.r3{display:grid;grid-template-columns:1fr;gap:12px}
+
+.card{background:#111827;border:1px solid rgba(148,163,184,.1);border-radius:10px;padding:14px}
+.ct-em{border-top:2px solid #10b981}
+.ct-amb{border-top:2px solid #f59e0b}
+.ct-blu{border-top:2px solid #3b82f6}
+.ct-red{border-top:2px solid #ef4444}
+.clabel{font-family:var(--mon);font-size:8px;font-weight:600;color:#64748b;letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px}
+
+.gauge-wrap{display:flex;flex-direction:column;align-items:center}
+.gauge-score-center{position:absolute;text-align:center;bottom:8px}
+.gscore{font-family:var(--mon);font-size:28px;font-weight:600;color:#f1f5f9;line-height:1}
+.gdelta{font-family:var(--mon);font-size:9px;color:#10b981;background:rgba(16,185,129,.1);padding:2px 7px;border-radius:3px;animation:deltaIn .3s ease;margin-bottom:4px}
+.grisk{font-family:var(--mon);font-size:9px;color:#64748b;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+.spark-header{display:flex;justify-content:space-between;margin-bottom:3px}
+.spark-label{font-family:var(--mon);font-size:8px;color:#64748b}
+.spark-delta{font-family:var(--mon);font-size:8px}
+
+.pillar{margin-bottom:14px}.pillar:last-child{margin-bottom:0}
+.ph{display:flex;justify-content:space-between;margin-bottom:5px}
+.pname{font-size:11px;font-weight:500;color:#cbd5e1}
+.ppct{font-family:var(--mon);font-size:11px;font-weight:600}
+.ptrack{height:5px;background:#1e293b;border-radius:3px;overflow:hidden}
+.pfill{height:100%;border-radius:3px;transition:width .9s cubic-bezier(.25,1,.5,1)}
+.psub{font-family:var(--mon);font-size:8px;color:#475569;margin-top:3px}
+
+.audit-center{display:flex;flex-direction:column;align-items:center;justify-content:center;height:calc(100% - 22px);gap:8px;text-align:center}
+.audit-main{font-family:var(--mon);font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.audit-win{font-size:10px;color:#64748b;font-family:var(--mon)}
+
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:3px;font-family:var(--mon);font-size:8px;font-weight:600;letter-spacing:.07em;text-transform:uppercase}
+
+.exp-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(148,163,184,.06)}
+.exp-row:last-child{border:none}
+.ekey{font-family:var(--mon);font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.12em}
+.eval{font-family:var(--mon);font-size:9px;color:#94a3b8}
+.expbtn{width:100%;margin-top:12px;padding:10px 0;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);color:#3b82f6;border-radius:6px;cursor:pointer;font-family:var(--mon);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .2s}
+.expbtn:hover{background:rgba(59,130,246,.18);border-color:#3b82f6;box-shadow:0 0 16px rgba(59,130,246,.2)}
+
+.task-item{display:flex;align-items:flex-start;justify-content:space-between;gap:9px;padding:10px 11px;background:#1a2236;border:1px solid rgba(148,163,184,.1);border-radius:7px;transition:all .2s}
+.task-item.done{border-color:rgba(16,185,129,.2);background:rgba(16,185,129,.04)}
+.tid{font-family:var(--mon);font-size:8px;color:#64748b}
+.ntag{font-family:var(--mon);font-size:8px;padding:1px 4px;border-radius:2px;background:rgba(59,130,246,.1);color:#3b82f6;border:1px solid rgba(59,130,246,.2)}
+.tname{font-size:11px;font-weight:500;color:#cbd5e1;line-height:1.4}
+.tts{font-family:var(--mon);font-size:8px;color:#10b981;margin-top:3px;animation:fadeIn .4s ease}
+.tbtn{flex-shrink:0;font-family:var(--mon);font-size:8px;font-weight:600;padding:5px 9px;border-radius:4px;cursor:pointer;letter-spacing:.07em;text-transform:uppercase;transition:all .2s;white-space:nowrap;border:none}
+.tbtn-p{background:rgba(59,130,246,.1);color:#3b82f6;border:1px solid rgba(59,130,246,.22)}
+.tbtn-p:hover{background:rgba(59,130,246,.2);border-color:#3b82f6}
+.tbtn-d{background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.28);cursor:default}
+
+.ctrl-row{display:flex;align-items:center;gap:9px;cursor:pointer;padding:5px 7px;border-radius:5px;transition:background .15s}
+.ctrl-row:hover,.ctrl-row.open{background:#1a2236}
+.ctrl-fam{font-family:var(--mon);font-size:9px}
+.ctrl-track{flex:1;height:4px;background:#1e293b;border-radius:2px;overflow:hidden}
+.ctrl-fill{height:100%;border-radius:2px;transition:width .9s cubic-bezier(.25,1,.5,1)}
+.ctrl-pct{font-family:var(--mon);font-size:9px;width:26px;text-align:right}
+.ctrl-name{font-size:9px;color:#64748b;width:120px}
+.drill{background:#1a2236;border:1px solid rgba(148,163,184,.08);border-radius:6px;padding:9px 11px;margin:4px 0 4px 28px;animation:slideUp .2s ease;display:none}
+.drill.open{display:block}
+.drill-title{font-family:var(--mon);font-size:8px;color:#64748b;letter-spacing:.12em;text-transform:uppercase;margin-bottom:7px}
+.drill-item{display:flex;align-items:center;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(148,163,184,.06)}
+.drill-item:last-child{border:none}
+.dctrl{font-family:var(--mon);font-size:9px;color:#94a3b8}
+.dstatus{font-family:var(--mon);font-size:8px;font-weight:600}
+
+.poam-item{background:#1a2236;border:1px solid rgba(148,163,184,.08);border-radius:7px;padding:11px 13px}
+.poam-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px}
+.poam-id{font-family:var(--mon);font-size:8px;color:#64748b;margin-bottom:2px}
+.poam-title{font-size:12px;font-weight:500;color:#cbd5e1;line-height:1.4;margin-bottom:4px}
+.poam-due{font-family:var(--mon);font-size:8px;margin-bottom:6px}
+.poam-pct{font-family:var(--mon);font-size:18px;font-weight:600;flex-shrink:0;margin-left:10px}
+.poam-track{height:3px;background:#243050;border-radius:2px;overflow:hidden}
+.poam-fill{height:100%;border-radius:2px;transition:width .9s ease}
+.poam-foot{display:flex;justify-content:space-between;margin-top:4px}
+.poam-foot-label{font-family:var(--mon);font-size:8px;color:#475569}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:999;animation:fadeIn .2s ease}
+.modal{background:#111827;border:1px solid rgba(16,185,129,.35);border-top:2px solid #10b981;border-radius:12px;padding:26px;width:520px;max-width:95vw;position:relative;animation:slideUp .25s ease}
+.mclose{position:absolute;top:14px;right:14px;background:transparent;border:1px solid rgba(148,163,184,.15);color:#94a3b8;width:24px;height:24px;border-radius:4px;cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.mclose:hover{color:#f1f5f9;border-color:rgba(148,163,184,.3)}
+.mtitle{font-family:var(--mon);font-size:13px;font-weight:600;color:#f1f5f9;margin-bottom:3px}
+.msub{font-family:var(--mon);font-size:9px;color:#64748b;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}
+.mstep{display:flex;gap:8px;align-items:center;margin-bottom:5px}
+.mstep-check{color:#10b981;font-family:var(--mon);font-size:10px}
+.mstep-label{font-family:var(--mon);font-size:9px;color:#64748b}
+.hash-block{background:#0a0e17;border:1px solid rgba(148,163,184,.1);border-radius:6px;padding:10px 13px;margin-bottom:10px}
+.hash-key{font-family:var(--mon);font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px}
+.hash-file{font-size:10px;color:#94a3b8;font-family:var(--mon);margin-bottom:4px}
+.hash-val{font-family:var(--mon);font-size:11px;word-break:break-all;letter-spacing:.04em;line-height:1.6}
+.hash-meta{font-family:var(--mon);font-size:9px;color:#64748b;line-height:1.8}
+.mstats{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin:10px 0}
+.mstat{background:#1a2236;border-radius:6px;padding:8px 10px}
+.mstat-val{font-family:var(--mon);font-size:16px;font-weight:600;color:#10b981}
+.mstat-key{font-family:var(--mon);font-size:8px;color:#64748b;text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+.mcheck{font-family:var(--mon);font-size:9px;color:#94a3b8;line-height:2;margin-bottom:12px}
+.mcheck-row{display:flex;gap:8px;align-items:center}
+.mcr-icon{color:#10b981;font-size:11px}
+.donebtn{width:100%;padding:10px 0;border-radius:6px;cursor:pointer;font-family:var(--mon);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:7px;transition:all .3s}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">
+    <div class="pulse-dot"></div>
+    <div>
+      COMPLIANCE<span style="color:#10b981">PULSE</span>
+      <div class="logo-sub">CMMC 2.0 · NIST SP 800-171r2</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="tlabel">Silo Tenant</span>
+    <select class="tsel" id="tenantSel" onchange="switchTenant(this.value)">
+      <option value="alpha">Alpha Aerospace</option>
+      <option value="apex">Apex Defense</option>
+    </select>
+    <div style="position:relative">
+      <button class="bell-btn" id="bellBtn" onclick="toggleNotif()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <div class="notif-badge" id="notifCount">3</div>
+      </button>
+      <div class="notif-drop" id="notifDrop">
+        <div class="notif-header">Upcoming Deadlines</div>
+        <div id="notifList"></div>
+      </div>
+    </div>
+    <div class="live-pill">Live</div>
+    <div class="sync-ts" id="syncTs">Synced just now</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="r1">
+
+    <!-- GAUGE -->
+    <div class="card ct-em">
+      <div class="clabel">Readiness Score</div>
+      <div class="gauge-wrap">
+        <div style="position:relative;display:inline-flex;align-items:center;justify-content:center">
+          <svg id="gaugeSvg" width="140" height="90" viewBox="0 0 140 90" style="overflow:visible">
+            <defs>
+              <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" id="g0" stop-color="#064e36"/>
+                <stop offset="100%" id="g1" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+            <path id="gaugeTrack" fill="none" stroke="rgba(148,163,184,0.1)" stroke-width="9" stroke-linecap="round"/>
+            <path id="gaugeFill" fill="none" stroke="url(#gg)" stroke-width="9" stroke-linecap="round"/>
+          </svg>
+          <div class="gauge-score-center">
+            <div class="gscore"><span id="scoreNum">78</span><span style="font-size:13px;color:#64748b">%</span></div>
+          </div>
+        </div>
+        <div id="deltaMsg" class="gdelta" style="display:none"></div>
+        <div class="grisk" id="riskLvl">LOW RISK</div>
+        <div style="width:100%">
+          <div class="spark-header">
+            <span class="spark-label">30-day trend</span>
+            <span class="spark-delta" id="sparkDelta">+17%</span>
+          </div>
+          <canvas id="sparkCanvas" width="182" height="34" style="width:100%;height:34px;display:block"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- PILLARS -->
+    <div class="card">
+      <div class="clabel">Compliance Pillars</div>
+      <div id="pillars"></div>
+    </div>
+
+    <!-- AUDIT STATUS -->
+    <div class="card">
+      <div class="clabel">Audit-Ready Status</div>
+      <div class="audit-center">
+        <div id="auditIcon"></div>
+        <div class="audit-main" id="auditMain">READY</div>
+        <div class="audit-win" id="auditWin">Audit Window: Optimal</div>
+        <div id="auditBadge" style="margin-top:3px"></div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="card ct-blu">
+      <div class="clabel">Audit Package</div>
+      <div>
+        <div class="exp-row"><span class="ekey">Standard</span><span class="eval">NIST SP 800-171r2</span></div>
+        <div class="exp-row"><span class="ekey">Framework</span><span class="eval">CMMC 2.0 Level 2</span></div>
+        <div class="exp-row"><span class="ekey">Tenant</span><span class="eval" id="expTenant">Alpha Aerospace</span></div>
+        <div class="exp-row"><span class="ekey">Generated</span><span class="eval">Real-time / Current</span></div>
+        <div class="exp-row"><span class="ekey">Controls</span><span class="eval">110 Practices</span></div>
+        <div class="exp-row"><span class="ekey">Classification</span><span class="eval">CUI / ITAR</span></div>
+      </div>
+      <button class="expbtn" onclick="openModal()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+        Export Audit Package
+      </button>
+    </div>
+  </div>
+
+  <div class="r2">
+    <!-- TASKS -->
+    <div class="card ct-amb">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="clabel" style="margin-bottom:0">Micro-Reminders · Task Log</div>
+        <div id="taskCount" class="badge"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;max-height:290px;overflow-y:auto" id="taskList"></div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="card">
+      <div class="clabel">NIST 800-171 Control Families — click any row to drill down</div>
+      <div id="controls" style="display:flex;flex-direction:column;gap:2px"></div>
+    </div>
+  </div>
+
+  <div class="r3">
+    <!-- POAM -->
+    <div class="card ct-red">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="clabel" style="margin-bottom:0">Plan of Action & Milestones (POA&M) — Active Remediation</div>
+        <div id="poamBadge" class="badge" style="background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.25)"></div>
+      </div>
+      <div id="poamGrid" style="display:grid;gap:12px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <button class="mclose" onclick="closeModal()">✕</button>
+    <div class="mtitle">Audit-Ready Export Package</div>
+    <div class="msub" id="modalSub"></div>
+    <div id="modalInner"></div>
+  </div>
+</div>
+
+<script>
+const TENANTS = {
+  alpha:{
+    name:"Alpha Aerospace",score:78,risk:"LOW RISK",
+    auditStatus:"READY",auditWin:"Audit Window: Optimal",auditColor:"#10b981",
+    trend:[61,63,64,65,65,67,68,67,69,70,71,72,73,74,75,76,76,77,78,78],
+    pillars:[
+      {name:"Access Control (AC)",pct:85,col:"#10b981",nist:"AC.1.001–AC.3.017"},
+      {name:"System & Comm Protection (SC)",pct:70,col:"#f59e0b",nist:"SC.1.175–SC.3.187"},
+      {name:"Identification & Auth (IA)",pct:80,col:"#10b981",nist:"IA.1.076–IA.3.083"},
+    ],
+    tasks:[
+      {id:"TSK-0041",name:"Verify MFA Audit Logs — Q2 privileged account review",nist:"AC.3.012",sev:"crit",done:false},
+      {id:"TSK-0038",name:"Review Physical Access Logs — Server Room 4C visitor sheets",nist:"PE.2.120",sev:"high",done:false},
+      {id:"TSK-0033",name:"Update Incident Response Plan — annual revision cycle FY-2025",nist:"IR.2.092",sev:"med",done:false},
+    ],
+    controls:[
+      {fam:"AC",name:"Access Control",pct:85,col:"#10b981",practices:[{id:"3.1.1",name:"Limit system access to authorized users",ok:true},{id:"3.1.2",name:"Limit access types (read/write/exec)",ok:true},{id:"3.1.12",name:"Monitor and control remote access sessions",ok:false}]},
+      {fam:"AM",name:"Asset Management",pct:72,col:"#f59e0b",practices:[{id:"3.18.1",name:"Identify and document CUI assets",ok:true},{id:"3.18.2",name:"Maintain inventory of org-controlled assets",ok:false},{id:"3.18.3",name:"Manage asset lifecycle and disposal",ok:false}]},
+      {fam:"AT",name:"Awareness & Training",pct:68,col:"#f59e0b",practices:[{id:"3.2.1",name:"Security awareness training conducted",ok:true},{id:"3.2.2",name:"Role-based training for privileged users",ok:false},{id:"3.2.3",name:"Insider threat awareness program",ok:false}]},
+      {fam:"CM",name:"Config Management",pct:91,col:"#10b981",practices:[{id:"3.4.1",name:"Establish baseline configurations",ok:true},{id:"3.4.2",name:"Enforce config settings via STIG",ok:true},{id:"3.4.6",name:"Employ principle of least functionality",ok:true}]},
+      {fam:"IA",name:"Identification & Auth",pct:80,col:"#10b981",practices:[{id:"3.5.1",name:"Identify users, processes, and devices",ok:true},{id:"3.5.3",name:"Use MFA for network access to CUI systems",ok:false},{id:"3.5.7",name:"Enforce minimum password complexity",ok:true}]},
+    ],
+    poam:[
+      {id:"POA-001",title:"Deploy MFA across all privileged accounts",nist:"AC.3.012",due:"2025-09-15",pct:45,col:"#ef4444"},
+      {id:"POA-002",title:"Complete role-based cybersecurity training — AT.2.056",nist:"AT.2.056",due:"2025-08-30",pct:30,col:"#f59e0b"},
+    ],
+    notifs:[
+      {text:"MFA audit log review due in 3 days",color:"#ef4444",urgency:"Critical",time:"3 days"},
+      {text:"Q3 media sanitization records — sign-off needed",color:"#f59e0b",urgency:"High",time:"7 days"},
+      {text:"SSP re-attestation window opens in 12 days",color:"#f59e0b",urgency:"High",time:"12 days"},
+    ]
+  },
+  apex:{
+    name:"Apex Defense",score:62,risk:"MODERATE RISK",
+    auditStatus:"CONDITIONAL",auditWin:"Audit Window: Caution",auditColor:"#f59e0b",
+    trend:[71,70,69,68,68,66,65,64,65,63,63,62,62,61,62,61,62,62,61,62],
+    pillars:[
+      {name:"Access Control (AC)",pct:58,col:"#ef4444",nist:"AC.1.001–AC.3.017"},
+      {name:"System & Comm Protection (SC)",pct:65,col:"#f59e0b",nist:"SC.1.175–SC.3.187"},
+      {name:"Identification & Auth (IA)",pct:61,col:"#f59e0b",nist:"IA.1.076–IA.3.083"},
+    ],
+    tasks:[
+      {id:"TSK-0019",name:"FIPS 140-2 cryptographic module re-validation documentation",nist:"SC.3.177",sev:"crit",done:false},
+      {id:"TSK-0017",name:"Remediate open POA&M finding — IR-3.098 closure evidence",nist:"IR.3.098",sev:"crit",done:false},
+      {id:"TSK-0014",name:"Renew third-party vendor CMMC attestation letters on file",nist:"SR.2.150",sev:"high",done:false},
+      {id:"TSK-0011",name:"Validate SIEM log forwarding continuity — all network nodes",nist:"AU.2.042",sev:"high",done:false},
+    ],
+    controls:[
+      {fam:"AC",name:"Access Control",pct:58,col:"#ef4444",practices:[{id:"3.1.1",name:"Limit system access to authorized users",ok:true},{id:"3.1.2",name:"Limit access types (read/write/exec)",ok:false},{id:"3.1.12",name:"Monitor and control remote access sessions",ok:false}]},
+      {fam:"AM",name:"Asset Management",pct:60,col:"#f59e0b",practices:[{id:"3.18.1",name:"Identify and document CUI assets",ok:true},{id:"3.18.2",name:"Maintain inventory of org-controlled assets",ok:false},{id:"3.18.3",name:"Manage asset lifecycle and disposal",ok:false}]},
+      {fam:"AT",name:"Awareness & Training",pct:55,col:"#ef4444",practices:[{id:"3.2.1",name:"Security awareness training conducted",ok:false},{id:"3.2.2",name:"Role-based training for privileged users",ok:false},{id:"3.2.3",name:"Insider threat awareness program",ok:true}]},
+      {fam:"CM",name:"Config Management",pct:70,col:"#f59e0b",practices:[{id:"3.4.1",name:"Establish baseline configurations",ok:true},{id:"3.4.2",name:"Enforce config settings via STIG",ok:false},{id:"3.4.6",name:"Employ principle of least functionality",ok:true}]},
+      {fam:"IA",name:"Identification & Auth",pct:61,col:"#f59e0b",practices:[{id:"3.5.1",name:"Identify users, processes, and devices",ok:true},{id:"3.5.3",name:"Use MFA for network access to CUI systems",ok:false},{id:"3.5.7",name:"Enforce minimum password complexity",ok:false}]},
+    ],
+    poam:[
+      {id:"POA-001",title:"Remediate FIPS 140-2 cryptographic non-compliance",nist:"SC.3.177",due:"2025-08-01",pct:15,col:"#ef4444"},
+      {id:"POA-002",title:"Deploy MFA across all privileged network access points",nist:"AC.3.012",due:"2025-08-20",pct:20,col:"#ef4444"},
+      {id:"POA-003",title:"Restore SIEM log integrity and audit trail continuity",nist:"AU.2.042",due:"2025-09-01",pct:35,col:"#f59e0b"},
+    ],
+    notifs:[
+      {text:"FIPS 140-2 re-validation OVERDUE — immediate action required",color:"#ef4444",urgency:"Critical",time:"Overdue"},
+      {text:"MFA deployment stalled — 80% accounts unprotected",color:"#ef4444",urgency:"Critical",time:"2 days"},
+      {text:"SIEM log gap detected — AU control family at risk",color:"#f59e0b",urgency:"High",time:"5 days"},
+      {text:"Vendor CMMC attestation letters expired",color:"#f59e0b",urgency:"High",time:"Overdue"},
+    ]
+  }
+};
+
+let cur = 'alpha';
+let taskStates = {
+  alpha: TENANTS.alpha.tasks.map(t=>({...t})),
+  apex: TENANTS.apex.tasks.map(t=>({...t}))
+};
+let openDrill = null;
+let syncSecs = 0;
+let syncIv = null;
+let sparkChart = null;
+
+function switchTenant(v){
+  cur = v;
+  openDrill = null;
+  document.getElementById('notifDrop').classList.remove('open');
+  syncSecs = 0;
+  renderAll();
+}
+
+function getScore(){
+  const t = TENANTS[cur];
+  const tasks = taskStates[cur];
+  const done = tasks.filter(x=>x.done).length;
+  const bonus = Math.round((done/Math.max(tasks.length,1))*8);
+  return Math.min(t.score + bonus, 99);
+}
+
+/* ── GAUGE ── */
+function renderGauge(){
+  const score = getScore();
+  const t = TENANTS[cur];
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('riskLvl').textContent = t.risk;
+
+  const R=52,cx=70,cy=68;
+  const toRad = d => d*Math.PI/180;
+  const startA = -210, endA = 30;
+  const arc = d => {const a=toRad(d);return{x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)}};
+  const s=arc(startA),e=arc(endA);
+  const track = document.getElementById('gaugeTrack');
+  const fill = document.getElementById('gaugeFill');
+  track.setAttribute('d',`M${s.x},${s.y} A${R},${R} 0 1,1 ${e.x},${e.y}`);
+  const pct = score/100;
+  const fillDeg = startA + (endA-startA)*pct;
+  const fe = arc(fillDeg);
+  const large = (endA-startA)*pct>180?1:0;
+  fill.setAttribute('d',`M${s.x},${s.y} A${R},${R} 0 ${large},1 ${fe.x},${fe.y}`);
+
+  const col = score>=75?'#10b981':score>=60?'#f59e0b':'#ef4444';
+  document.getElementById('g0').setAttribute('stop-color',col==='#10b981'?'#064e36':col==='#f59e0b'?'#78350f':'#7f1d1d');
+  document.getElementById('g1').setAttribute('stop-color',col);
+}
+
+/* ── SPARKLINE ── */
+function renderSparkline(){
+  const t = TENANTS[cur];
+  const data = [...t.trend];
+  const col = data[data.length-1]>=data[0]?'#10b981':'#ef4444';
+  const delta = data[data.length-1]-data[0];
+  const dd = document.getElementById('sparkDelta');
+  dd.textContent = (delta>=0?'+':'')+delta+'%';
+  dd.style.color = col;
+
+  if(sparkChart){sparkChart.destroy();sparkChart=null}
+  const canvas = document.getElementById('sparkCanvas');
+  const ctx = canvas.getContext('2d');
+  sparkChart = new Chart(ctx,{
+    type:'line',
+    data:{labels:data.map((_,i)=>i),datasets:[{data,borderColor:col,borderWidth:1.5,pointRadius:0,tension:0.4,fill:true,
+      backgroundColor:(c)=>{const g=c.chart.ctx.createLinearGradient(0,0,0,34);g.addColorStop(0,col+'44');g.addColorStop(1,col+'00');return g}}]},
+    options:{animation:false,responsive:false,plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{display:false},y:{display:false,min:Math.min(...data)-5,max:Math.max(...data)+5}}}
+  });
+}
+
+/* ── PILLARS ── */
+function renderPillars(){
+  const t = TENANTS[cur];
+  document.getElementById('pillars').innerHTML = t.pillars.map(p=>`
+    <div class="pillar">
+      <div class="ph"><span class="pname">${p.name}</span><span class="ppct" style="color:${p.col}">${p.pct}%</span></div>
+      <div class="ptrack"><div class="pfill" style="background:${p.col};width:0" data-w="${p.pct}"></div></div>
+      <div class="psub">${p.nist}</div>
+    </div>`).join('');
+  setTimeout(()=>document.querySelectorAll('.pfill').forEach(el=>el.style.width=el.dataset.w+'%'),80);
+}
+
+/* ── AUDIT STATUS ── */
+function renderAudit(){
+  const t = TENANTS[cur];
+  const score = getScore();
+  const col = t.auditColor;
+  const ready = score>=75;
+
+  const shieldSvg = `<svg width="52" height="52" viewBox="0 0 48 48" fill="none">
+    <path d="M24 4L8 10v14c0 9.4 6.8 18.2 16 20.4C33.2 42.2 40 33.4 40 24V10L24 4z" fill="${col}" fill-opacity=".12" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M17 24l5 5 9-9" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>`;
+  const warnSvg = `<svg width="52" height="52" viewBox="0 0 48 48" fill="none">
+    <path d="M24 6L4 42h40L24 6z" fill="${col}" fill-opacity=".12" stroke="${col}" stroke-width="1.5" stroke-linejoin="round"/>
+    <line x1="24" y1="19" x2="24" y2="30" stroke="${col}" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="24" cy="36" r="1.8" fill="${col}"/>
+  </svg>`;
+
+  document.getElementById('auditIcon').innerHTML = ready?shieldSvg:warnSvg;
+  document.getElementById('auditMain').textContent = t.auditStatus;
+  document.getElementById('auditMain').style.color = col;
+  document.getElementById('auditWin').textContent = t.auditWin;
+  document.getElementById('auditBadge').innerHTML = ready
+    ? `<span class="badge" style="background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.25)">✓ Go for Audit</span>`
+    : `<span class="badge" style="background:rgba(245,158,11,.1);color:#f59e0b;border:1px solid rgba(245,158,11,.25)">⚠ Conditional</span>`;
+}
+
+/* ── TASKS ── */
+function renderTasks(){
+  const tasks = taskStates[cur];
+  const open = tasks.filter(x=>!x.done).length;
+  const countEl = document.getElementById('taskCount');
+  countEl.textContent = open+' open';
+  const oc = open===0?['rgba(16,185,129,.1)','#10b981','rgba(16,185,129,.25)']:
+             open<=1?['rgba(245,158,11,.1)','#f59e0b','rgba(245,158,11,.25)']:
+                     ['rgba(239,68,68,.1)','#ef4444','rgba(239,68,68,.25)'];
+  countEl.style.cssText=`background:${oc[0]};color:${oc[1]};border:1px solid ${oc[2]}`;
+
+  const sevC = s=>s==='crit'?'#ef4444':s==='high'?'#f59e0b':'#eab308';
+  const sevL = s=>s==='crit'?'Critical':s==='high'?'High':'Medium';
+
+  document.getElementById('taskList').innerHTML = tasks.map((tk,i)=>`
+    <div class="task-item ${tk.done?'done':''}">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:3px;flex-wrap:wrap">
+          <span class="tid">${tk.id}</span>
+          <span class="ntag">${tk.nist}</span>
+          <span class="badge" style="background:${sevC(tk.sev)}18;color:${sevC(tk.sev)};border:1px solid ${sevC(tk.sev)}44">${sevL(tk.sev)}</span>
+        </div>
+        <div class="tname">${tk.name}</div>
+        ${tk.done&&tk.ts?`<div class="tts">Verified · ${tk.ts}</div>`:''}
+      </div>
+      ${tk.done
+        ?`<button class="tbtn tbtn-d">✓ Verified</button>`
+        :`<button class="tbtn tbtn-p" onclick="completeTask(${i})">Log Evidence</button>`}
+    </div>`).join('');
+}
+
+function completeTask(i){
+  const d = new Date();
+  taskStates[cur][i].done = true;
+  taskStates[cur][i].ts = d.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})+' UTC';
+  syncSecs = 0;
+  const dm = document.getElementById('deltaMsg');
+  dm.textContent = '↑ Score updated';
+  dm.style.display = 'block';
+  setTimeout(()=>dm.style.display='none',3000);
+  renderGauge();
+  renderAudit();
+  renderTasks();
+  renderSparkline();
+}
+
+/* ── CONTROLS ── */
+function renderControls(){
+  const t = TENANTS[cur];
+  document.getElementById('controls').innerHTML = t.controls.map((c,i)=>{
+    const key = cur+'-'+i;
+    const isOpen = openDrill===key;
+    return `
+      <div>
+        <div class="ctrl-row ${isOpen?'open':''}" onclick="toggleDrill('${key}')">
+          <span class="badge ctrl-fam" style="background:${c.col}18;color:${c.col};border:1px solid ${c.col}44">${c.fam}</span>
+          <div class="ctrl-track"><div class="ctrl-fill" style="background:${c.col};width:0" data-w="${c.pct}"></div></div>
+          <span class="ctrl-pct" style="color:${c.col}">${c.pct}%</span>
+          <span class="ctrl-name">${c.name}</span>
+          <span style="font-family:var(--mon);font-size:9px;color:#475569">${isOpen?'▲':'▼'}</span>
+        </div>
+        <div class="drill ${isOpen?'open':''}" id="drill-${key}">
+          <div class="drill-title">${c.name} — Practice Controls</div>
+          ${c.practices.map(p=>`
+            <div class="drill-item">
+              <span class="dctrl">${p.id} — ${p.name}</span>
+              <span class="dstatus" style="color:${p.ok?'#10b981':'#ef4444'}">${p.ok?'✓ Satisfied':'✕ Open'}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }).join('');
+  setTimeout(()=>document.querySelectorAll('.ctrl-fill').forEach(el=>el.style.width=el.dataset.w+'%'),80);
+}
+
+function toggleDrill(key){
+  openDrill = openDrill===key?null:key;
+  renderControls();
+}
+
+/* ── POAM ── */
+function renderPoam(){
+  const t = TENANTS[cur];
+  document.getElementById('poamBadge').textContent = t.poam.length+' open items';
+  document.getElementById('poamGrid').style.gridTemplateColumns = `repeat(${t.poam.length},1fr)`;
+  document.getElementById('poamGrid').innerHTML = t.poam.map(p=>`
+    <div class="poam-item" style="border-left:3px solid ${p.col};border-radius:0 7px 7px 0">
+      <div class="poam-header">
+        <div>
+          <div class="poam-id">${p.id}</div>
+          <div class="poam-title">${p.title}</div>
+          <span class="badge" style="background:rgba(59,130,246,.1);color:#3b82f6;border:1px solid rgba(59,130,246,.2)">${p.nist}</span>
+        </div>
+        <div class="poam-pct" style="color:${p.col}">${p.pct}%</div>
+      </div>
+      <div class="poam-due" style="color:${p.col}">Due: ${p.due}</div>
+      <div class="poam-track"><div class="poam-fill" style="width:${p.pct}%;background:${p.col}"></div></div>
+      <div class="poam-foot">
+        <span class="poam-foot-label">Remediation Progress</span>
+        <span class="badge" style="background:${p.col}18;color:${p.col};border:1px solid ${p.col}44">In Progress</span>
+      </div>
+    </div>`).join('');
+}
+
+/* ── NOTIFS ── */
+function renderNotifs(){
+  const t = TENANTS[cur];
+  document.getElementById('notifCount').textContent = t.notifs.length;
+  document.getElementById('notifList').innerHTML = t.notifs.map(n=>`
+    <div class="notif-item">
+      <div class="ndot" style="background:${n.color}"></div>
+      <div>
+        <div class="ntext">${n.text}</div>
+        <div class="ntime" style="color:${n.color}">${n.urgency} · ${n.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleNotif(){
+  document.getElementById('notifDrop').classList.toggle('open');
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#bellBtn')&&!e.target.closest('#notifDrop'))
+    document.getElementById('notifDrop').classList.remove('open');
+});
+
+/* ── EXPORT MODAL ── */
+function rndHex(n){const c='0123456789abcdef';return Array.from({length:n},()=>c[Math.floor(Math.random()*16)]).join('')}
+
+let typeIv = null;
+let modalHashDone = false;
+
+function openModal(){
+  const t = TENANTS[cur];
+  const score = getScore();
+  const tasks = taskStates[cur];
+  const done = tasks.filter(x=>x.done).length;
+  document.getElementById('modalSub').textContent = t.name+' · CMMC 2.0 Level 2 · NIST SP 800-171r2';
+
+  const steps = [
+    'Compiling cryptographic log manifest...',
+    'Hashing evidence artifacts with SHA-256...',
+    'Serializing NIST 800-171 control attestations...',
+    'Generating tamper-evident audit seals...',
+    'Embedding RFC 3161 timestamp authority...',
+    'Package sealed — ready for federal auditor.'
+  ];
+  let si = 0;
+  document.getElementById('modalInner').innerHTML = `
+    <div style="height:2px;background:#1e293b;border-radius:2px;overflow:hidden;margin-bottom:8px">
+      <div id="mProgBar" style="height:100%;background:#10b981;border-radius:2px;width:0%;transition:width .35s ease"></div>
+    </div>
+    <div id="mStepLabel" style="font-family:var(--mon);font-size:10px;color:#10b981;letter-spacing:.07em;margin-bottom:16px">${steps[0]}</div>
+    <div id="mStepList" style="display:flex;flex-direction:column;gap:5px"></div>`;
+  document.getElementById('modalOverlay').style.display = 'flex';
+
+  const iv = setInterval(()=>{
+    si++;
+    const lbl = document.getElementById('mStepLabel');
+    const bar = document.getElementById('mProgBar');
+    const list = document.getElementById('mStepList');
+    if(!lbl)return clearInterval(iv);
+    if(si<steps.length){
+      lbl.textContent = steps[si];
+      bar.style.width = ((si+1)/steps.length*100)+'%';
+      list.innerHTML += `<div class="mstep"><span class="mstep-check">✓</span><span class="mstep-label">${steps[si-1]}</span></div>`;
+    } else {
+      clearInterval(iv);
+      setTimeout(()=>renderModalReady(t,score,done,tasks.length),300);
+    }
+  },400);
+}
+
+function renderModalReady(t,score,done,total){
+  const finalHash = rndHex(64);
+  const sig = 'CP-SIG-'+rndHex(16).toUpperCase();
+  const ts = new Date().toISOString();
+  const filename = `evidence_bundle_${t.name.replace(/\s/g,'_').toLowerCase()}_${Date.now()}.tar.gz`;
+
+  modalHashDone = false;
+  document.getElementById('modalInner').innerHTML = `
+    <div class="hash-block">
+      <div class="hash-key">SHA-256 Evidence Bundle Hash</div>
+      <div class="hash-file">${filename}</div>
+      <div style="margin-bottom:4px">
+        <span style="font-family:var(--mon);font-size:9px;color:#64748b">SHA-256:&nbsp;</span>
+        <span id="hashSpan" class="hash-val"></span>
+      </div>
+      <div class="hash-meta">
+        <div>Signed: <span style="color:#94a3b8">${sig}</span></div>
+        <div>Timestamp: <span style="color:#94a3b8">${ts} · RFC 3161 TSA</span></div>
+      </div>
+    </div>
+    <div class="mstats">
+      <div class="mstat"><div class="mstat-val">${score}%</div><div class="mstat-key">Readiness</div></div>
+      <div class="mstat"><div class="mstat-val">14/14</div><div class="mstat-key">Ctrl Families</div></div>
+      <div class="mstat"><div class="mstat-val">${done}/${total}</div><div class="mstat-key">Tasks Done</div></div>
+      <div class="mstat"><div class="mstat-val">CMMC L2</div><div class="mstat-key">Framework</div></div>
+    </div>
+    <div style="height:1px;background:rgba(148,163,184,.08);margin:9px 0"></div>
+    <div class="mcheck">
+      ${['System Security Plan (SSP) Rev 4.2 included','POA&M status matrix exported','Audit log chain of custody sealed','Evidence artifacts cryptographically bound','NIST 800-171 control attestations embedded','FIPS 140-2 module documentation attached'].map(c=>`<div class="mcheck-row"><span class="mcr-icon">✓</span><span>${c}</span></div>`).join('')}
+    </div>
+    <button id="doneBtn" class="donebtn" onclick="closeModal()" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.3);color:#3b82f6">
+      Computing hash...
+    </button>`;
+
+  /* TYPEWRITER HASH */
+  const el = document.getElementById('hashSpan');
+  let i = 0;
+  if(typeIv)clearInterval(typeIv);
+  typeIv = setInterval(()=>{
+    i++;
+    if(i<=finalHash.length){
+      const revealed = finalHash.slice(0,i);
+      const noise = Array.from({length:Math.min(6,finalHash.length-i)},()=>'0123456789abcdef'[Math.floor(Math.random()*16)]).join('');
+      el.innerHTML = `<span style="color:#10b981">${revealed}</span><span style="color:#f59e0b">${noise}</span><span style="border-right:2px solid #f59e0b;animation:blink .6s step-end infinite">&nbsp;</span>`;
+    } else {
+      clearInterval(typeIv);
+      el.innerHTML = `<span style="color:#10b981">${finalHash}</span>`;
+      const btn = document.getElementById('doneBtn');
+      if(btn){
+        btn.style.background='rgba(16,185,129,.1)';
+        btn.style.borderColor='rgba(16,185,129,.3)';
+        btn.style.color='#10b981';
+        btn.textContent='✓ Package Ready · Close';
+      }
+    }
+  },20);
+}
+
+function closeModal(){
+  if(typeIv)clearInterval(typeIv);
+  document.getElementById('modalOverlay').style.display='none';
+}
+
+/* ── SYNC TIMER ── */
+function startSync(){
+  if(syncIv)clearInterval(syncIv);
+  syncSecs = 0;
+  syncIv = setInterval(()=>{
+    syncSecs++;
+    const el = document.getElementById('syncTs');
+    if(!el)return;
+    el.textContent = syncSecs<5?'Synced just now':syncSecs<60?`Synced ${syncSecs}s ago`:`Synced ${Math.floor(syncSecs/60)}m ago`;
+  },1000);
+}
+
+/* ── EXPORT META ── */
+function renderExpMeta(){
+  document.getElementById('expTenant').textContent = TENANTS[cur].name;
+}
+
+function renderAll(){
+  renderGauge();
+  renderSparkline();
+  renderPillars();
+  renderAudit();
+  renderTasks();
+  renderControls();
+  renderPoam();
+  renderNotifs();
+  renderExpMeta();
+  document.getElementById('modalSub').textContent = TENANTS[cur].name+' · CMMC 2.0 Level 2 · NIST SP 800-171r2';
+}
+
+renderAll();
+startSync();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</body>
+</html>
